@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factory Machine Scheduler</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #e0e0e0; padding: 20px; margin: 0; }
+        .container { max-width: 600px; margin: 0 auto; background: #1e1e1e; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        h2 { text-align: center; color: #ffffff; }
+        .instructions { text-align: center; color: #a0a0a0; font-size: 14px; margin-bottom: 25px; }
+        
+        .priority-tier { background: #2a2a2a; border-radius: 8px; padding: 15px; margin-bottom: 20px; min-height: 60px; border: 2px dashed #444; }
+        .priority-tier.unassigned-zone { background: #332b00; border-color: #b38f00; }
+        .tier-header { font-weight: bold; color: #cccccc; margin-bottom: 10px; text-transform: uppercase; font-size: 14px; letter-spacing: 0.5px; }
+
+        .machine-list { list-style-type: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+        
+        .machine-item {
+            background: #383838; border: 1px solid #555; padding: 10px 15px;
+            border-radius: 6px; cursor: grab; font-size: 15px; font-weight: 600;
+            color: #ffffff; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .machine-item:hover { border-color: #3399ff; }
+        .machine-item:active { cursor: grabbing; }
+        
+        .machine-info { display: flex; flex-direction: column; }
+        .machine-note-text { font-size: 12px; color: #ffc107; font-weight: normal; font-style: italic; margin-top: 4px; display: none; }
+
+        .btn-note { background: none; border: none; cursor: pointer; font-size: 16px; opacity: 0.6; transition: opacity 0.2s; padding: 5px; }
+        .btn-note:hover { opacity: 1; }
+        .sortable-ghost { opacity: 0.4; background-color: #004085; }
+        
+        .btn-publish { display: block; width: 100%; padding: 16px; background-color: #0d6efd; color: white; border: none; border-radius: 6px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: background-color 0.2s; }
+        .btn-publish:hover { background-color: #0b5ed7; }
+        .btn-publish:disabled { background-color: #555; cursor: not-allowed; }
+        #success-msg { display: none; text-align: center; color: #4BB543; font-weight: bold; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Shift Machine Priorities</h2>
+    <p class="instructions">Drag machines into tiers. Click 📝 to add urgent order notes.</p>
+
+    <div class="priority-tier unassigned-zone">
+        <div class="tier-header">Unassigned Machines</div>
+        <ul id="pool" class="machine-list">
+            <li class="machine-item" data-id="Emba 175"><div class="machine-info"><span class="machine-name">Emba 175</span><span class="machine-note-text"></span></div><button class="btn-note" title="Add Note">📝</button></li>
+            <li class="machine-item" data-id="Emba 245"><div class="machine-info"><span class="machine-name">Emba 245</span><span class="machine-note-text"></span></div><button class="btn-note" title="Add Note">📝</button></li>
+            <li class="machine-item" data-id="Gopfert 1"><div class="machine-info"><span class="machine-name">Gopfert 1</span><span class="machine-note-text"></span></div><button class="btn-note" title="Add Note">📝</button></li>
+            <li class="machine-item" data-id="Gopfert 2"><div class="machine-info"><span class="machine-name">Gopfert 2</span><span class="machine-note-text"></span></div><button class="btn-note" title="Add Note">📝</button></li>
+            <li class="machine-item" data-id="Gopfert 3"><div class="machine-info"><span class="machine-name">Gopfert 3</span><span class="machine-note-text"></span></div><button class="btn-note" title="Add Note">📝</button></li>
+            <li class="machine-item" data-id="Bobst Masterfold"><div class="machine-info"><span class="machine-name">Bobst Masterfold</span><span class="machine-note-text"></span></div><button class="btn-note" title="Add Note">📝</button></li>
+        </ul>
+    </div>
+
+    <div class="priority-tier"><div class="tier-header">Priority 1 (Must Keep Running)</div><ul id="p1" class="machine-list"></ul></div>
+    <div class="priority-tier"><div class="tier-header">Priority 2</div><ul id="p2" class="machine-list"></ul></div>
+    <div class="priority-tier"><div class="tier-header">Priority 3</div><ul id="p3" class="machine-list"></ul></div>
+    <div class="priority-tier"><div class="tier-header">Priority 4</div><ul id="p4" class="machine-list"></ul></div>
+    <div class="priority-tier"><div class="tier-header">Priority 5</div><ul id="p5" class="machine-list"></ul></div>
+    <div class="priority-tier"><div class="tier-header">Priority 6 (Shut Down First)</div><ul id="p6" class="machine-list"></ul></div>
+
+    <button class="btn-publish" id="publish-btn">Publish Schedule & Notify</button>
+    <div id="success-msg">Schedule locked & saved!</div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCu2nTBQNMgbscey-lXrKKFSaHxjuusAuU",
+        authDomain: "schedule-notifications-6b3f7.firebaseapp.com",
+        projectId: "schedule-notifications-6b3f7",
+        storageBucket: "schedule-notifications-6b3f7.firebasestorage.app",
+        messagingSenderId: "674119888066",
+        appId: "1:674119888066:web:2bd725f9a017f57c519f5b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const sortableOptions = { group: 'shared', animation: 150, ghostClass: 'sortable-ghost', filter: '.btn-note' };
+    new Sortable(document.getElementById('pool'), sortableOptions);
+    new Sortable(document.getElementById('p1'), sortableOptions);
+    new Sortable(document.getElementById('p2'), sortableOptions);
+    new Sortable(document.getElementById('p3'), sortableOptions);
+    new Sortable(document.getElementById('p4'), sortableOptions);
+    new Sortable(document.getElementById('p5'), sortableOptions);
+    new Sortable(document.getElementById('p6'), sortableOptions);
+
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-note')) {
+            const listItem = e.target.closest('.machine-item');
+            const noteSpan = listItem.querySelector('.machine-note-text');
+            const currentNote = noteSpan.innerText;
+            
+            const newNote = prompt("Enter urgent order notes for " + listItem.getAttribute('data-id') + ":", currentNote);
+            
+            if (newNote !== null) {
+                noteSpan.innerText = newNote;
+                if (newNote.trim() !== "") {
+                    noteSpan.style.display = "block";
+                    e.target.innerText = "✏️";
+                } else {
+                    noteSpan.style.display = "none";
+                    e.target.innerText = "📝";
+                }
+            }
+        }
+    });
+
+    document.getElementById('publish-btn').addEventListener('click', async () => {
+        const unassigned = document.getElementById('pool').querySelectorAll('.machine-item');
+        if (unassigned.length > 0) {
+            alert("Warning: You have unassigned machines. Please assign all machines before publishing.");
+            return; 
+        }
+
+        const finalSchedule = [];
+        // Updated array to check all 6 lists
+        const tierIds = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6'];
+
+        tierIds.forEach((tierId, index) => {
+            const listElement = document.getElementById(tierId);
+            const items = listElement.querySelectorAll('.machine-item');
+            if (items.length > 0) {
+                const machinesInTier = Array.from(items).map(item => {
+                    return {
+                        id: item.getAttribute('data-id'),
+                        note: item.querySelector('.machine-note-text').innerText || ""
+                    };
+                });
+                finalSchedule.push({ priorityLevel: index + 1, machines: machinesInTier });
+            }
+        });
+
+        const publishBtn = document.getElementById('publish-btn');
+        publishBtn.innerText = "Publishing...";
+        publishBtn.disabled = true;
+
+        try {
+            await addDoc(collection(db, "schedules"), {
+                scheduleData: finalSchedule,
+                publishedAt: serverTimestamp(),
+                publishedBy: "Scheduler" 
+            });
+            const successMsg = document.getElementById('success-msg');
+            successMsg.style.display = 'block';
+            setTimeout(() => { successMsg.style.display = 'none'; }, 3000);
+        } catch (e) {
+            console.error("Error adding document: ", e);
+            alert("Error publishing schedule. Check connection.");
+        } finally {
+            publishBtn.innerText = "Publish Schedule & Notify";
+            publishBtn.disabled = false;
+        }
+    });
+</script>
+
+</body>
+</html>
