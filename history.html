@@ -18,13 +18,12 @@
         .priority-row { display: flex; margin-bottom: 10px; align-items: flex-start; }
         .priority-badge { background: #333; color: #ccc; padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase; width: 85px; text-align: center; margin-right: 15px; flex-shrink: 0; margin-top: 2px; }
         
-        /* Color coding for 6 tiers */
-        .p-1 { border-left: 4px solid #dc3545; } /* Red */
-        .p-2 { border-left: 4px solid #fd7e14; } /* Orange */
-        .p-3 { border-left: 4px solid #ffc107; } /* Yellow */
-        .p-4 { border-left: 4px solid #17a2b8; } /* Cyan */
-        .p-5 { border-left: 4px solid #6f42c1; } /* Purple */
-        .p-6 { border-left: 4px solid #6c757d; } /* Grey (Shut down first) */
+        .p-1 { border-left: 4px solid #dc3545; } 
+        .p-2 { border-left: 4px solid #fd7e14; } 
+        .p-3 { border-left: 4px solid #ffc107; } 
+        .p-4 { border-left: 4px solid #17a2b8; } 
+        .p-5 { border-left: 4px solid #6f42c1; } 
+        .p-6 { border-left: 4px solid #6c757d; } 
 
         .machine-list { color: #fff; font-size: 15px; display: flex; flex-direction: column; gap: 8px; width: 100%; }
         .machine-item-display { background: #2a2a2a; padding: 10px 15px; border-radius: 6px; border: 1px solid #444; display: flex; flex-direction: column; gap: 6px; }
@@ -33,10 +32,42 @@
         .machine-name-group { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
         .urgent-note { color: #ffc107; font-size: 13px; font-style: italic; }
         
-        /* New styling for Manager Comments */
-        .manager-comment { color: #0dcaf0; font-size: 13px; background: #1a2a3a; padding: 6px 10px; border-left: 3px solid #0dcaf0; border-radius: 4px; margin-top: 4px; }
-        .btn-comment { background: #333; color: #ccc; border: 1px solid #555; border-radius: 4px; padding: 4px 8px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+        .manager-comment { color: #e0e0e0; font-size: 13px; background: #1a2a3a; padding: 10px; border-left: 3px solid #0dcaf0; border-radius: 4px; margin-top: 4px; }
+        .manager-comment strong { color: #0dcaf0; }
+        
+        /* Updated image style to show it's clickable */
+        .manager-image { max-width: 100%; max-height: 200px; border-radius: 4px; margin-top: 10px; border: 1px solid #555; display: block; cursor: pointer; transition: transform 0.2s; }
+        .manager-image:hover { transform: scale(1.02); border-color: #0dcaf0; }
+        
+        .btn-comment { background: #333; color: #ccc; border: 1px solid #555; border-radius: 4px; padding: 6px 10px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
         .btn-comment:hover { background: #444; color: #fff; border-color: #0dcaf0; }
+
+        /* Custom Modal Styling */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: #1e1e1e; padding: 25px; border-radius: 8px; width: 90%; max-width: 450px; border: 1px solid #444; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .modal-content h3 { margin-top: 0; color: #ffffff; margin-bottom: 15px; }
+        .modal-content textarea { width: 100%; height: 80px; background: #2a2a2a; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 10px; margin-bottom: 15px; box-sizing: border-box; font-family: inherit; resize: vertical; }
+        .modal-content input[type="file"] { margin-bottom: 10px; color: #ccc; width: 100%; }
+        
+        /* Image Preview Box & Remove Button */
+        #preview-container { position: relative; display: inline-block; margin-bottom: 15px; width: 100%; }
+        #modal-preview { display: none; max-width: 100%; max-height: 150px; border-radius: 4px; border: 1px dashed #555; object-fit: contain; background: #121212; }
+        #btn-remove-image { display: none; position: absolute; top: -10px; right: -10px; background: #dc3545; color: white; border: none; border-radius: 50%; width: 26px; height: 26px; cursor: pointer; font-size: 14px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        #btn-remove-image:hover { background: #c82333; }
+        
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+        .modal-actions button { padding: 10px 15px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; font-size: 14px; }
+        #modal-cancel { background: #444; color: #e0e0e0; }
+        #modal-cancel:hover { background: #555; }
+        #modal-save { background: #0dcaf0; color: #000; }
+        #modal-save:hover { background: #0baccc; }
+        #modal-save:disabled { background: #555; color: #888; cursor: not-allowed; }
+
+        /* Full Screen Image Viewer Modal */
+        #viewer-modal { z-index: 2000; flex-direction: column; }
+        #close-viewer { position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; font-weight: bold; cursor: pointer; transition: color 0.2s; }
+        #close-viewer:hover { color: #dc3545; }
+        #viewer-img { max-width: 95%; max-height: 90%; border-radius: 8px; box-shadow: 0 5px 25px rgba(0,0,0,0.8); }
     </style>
 </head>
 <body>
@@ -51,10 +82,34 @@
     <div id="history-container"></div>
 </div>
 
+<div id="log-modal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>Log Shutdown: <span id="modal-machine-name" style="color: #0dcaf0;"></span></h3>
+        <textarea id="modal-text" placeholder="Type reason for early shutdown here..."></textarea>
+        <label style="font-size: 13px; color: #aaa; display: block; margin-bottom: 8px;">Attach Photo or <strong>Paste (Ctrl+V)</strong>:</label>
+        <input type="file" id="modal-file" accept="image/*">
+        
+        <div id="preview-container">
+            <img id="modal-preview" alt="Image Preview">
+            <button id="btn-remove-image" title="Remove Image">✖</button>
+        </div>
+        
+        <div class="modal-actions">
+            <button id="modal-cancel">Cancel</button>
+            <button id="modal-save">Save Log</button>
+        </div>
+    </div>
+</div>
+
+<div id="viewer-modal" class="modal-overlay">
+    <span id="close-viewer">&times;</span>
+    <img id="viewer-img">
+</div>
+
 <script type="module">
-    // Added 'doc' and 'updateDoc' to import so we can save comments
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
     import { getFirestore, collection, getDocs, query, orderBy, doc, updateDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-storage.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyCu2nTBQNMgbscey-lXrKKFSaHxjuusAuU",
@@ -67,11 +122,15 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    let currentDocId = null;
+    let currentMachine = null;
 
     async function loadHistory() {
         const historyContainer = document.getElementById('history-container');
         const loadingText = document.getElementById('loading');
-        historyContainer.innerHTML = ""; // Clear it before loading
+        historyContainer.innerHTML = ""; 
 
         try {
             const q = query(collection(db, "schedules"), orderBy("publishedAt", "desc"));
@@ -86,7 +145,7 @@
 
             querySnapshot.forEach((documentSnapshot) => {
                 const data = documentSnapshot.data();
-                const docId = documentSnapshot.id; // Grab the exact document ID to attach comments to later
+                const docId = documentSnapshot.id; 
                 
                 let formattedDate = "Unknown Date";
                 if (data.publishedAt) {
@@ -106,9 +165,20 @@
                                 let mName = typeof m === 'string' ? m : m.id;
                                 let mNote = typeof m === 'object' && m.note ? `<span class="urgent-note">- ${m.note}</span>` : "";
                                 
-                                // Check if a manager comment exists in the database for this specific machine
-                                let managerComment = (data.managerComments && data.managerComments[mName]) ? data.managerComments[mName] : "";
-                                let commentDisplay = managerComment ? `<div class="manager-comment">↳ Manager Log: ${managerComment}</div>` : "";
+                                let managerCommentDisplay = "";
+                                if (data.managerComments && data.managerComments[mName]) {
+                                    const logData = data.managerComments[mName];
+                                    if (typeof logData === 'string') {
+                                        managerCommentDisplay = `<div class="manager-comment"><strong>↳ Shift Log:</strong> ${logData}</div>`;
+                                    } else {
+                                        managerCommentDisplay = `<div class="manager-comment"><strong>↳ Shift Log:</strong> ${logData.text}`;
+                                        if (logData.imageUrl) {
+                                            // Added 'title' so hover shows instruction
+                                            managerCommentDisplay += `<img src="${logData.imageUrl}" class="manager-image" alt="Shutdown evidence" title="Click to enlarge">`;
+                                        }
+                                        managerCommentDisplay += `</div>`;
+                                    }
+                                }
 
                                 return `
                                 <div class="machine-item-display">
@@ -118,7 +188,7 @@
                                         </div>
                                         <button class="btn-comment" data-doc-id="${docId}" data-machine="${mName}">💬 Log Shutdown</button>
                                     </div>
-                                    ${commentDisplay}
+                                    ${managerCommentDisplay}
                                 </div>`;
                             }).join('');
                             
@@ -142,36 +212,155 @@
         }
     }
 
-    // Event listener for the "Log Shutdown" buttons
-    document.addEventListener('click', async (e) => {
+    // --- Modal Elements ---
+    const modal = document.getElementById('log-modal');
+    const btnCancel = document.getElementById('modal-cancel');
+    const btnSave = document.getElementById('modal-save');
+    const textInput = document.getElementById('modal-text');
+    const fileInput = document.getElementById('modal-file');
+    const previewImg = document.getElementById('modal-preview');
+    const btnRemoveImg = document.getElementById('btn-remove-image');
+    const machineNameLabel = document.getElementById('modal-machine-name');
+    
+    // Viewer Elements
+    const viewerModal = document.getElementById('viewer-modal');
+    const viewerImg = document.getElementById('viewer-img');
+    const closeViewer = document.getElementById('close-viewer');
+
+    // --- Open Log Modal ---
+    document.addEventListener('click', (e) => {
         if (e.target.classList.contains('btn-comment')) {
-            const docId = e.target.getAttribute('data-doc-id');
-            const machineName = e.target.getAttribute('data-machine');
+            currentDocId = e.target.getAttribute('data-doc-id');
+            currentMachine = e.target.getAttribute('data-machine');
             
-            const comment = prompt(`Enter shutdown reason/log for ${machineName}:`);
+            machineNameLabel.innerText = currentMachine;
+            textInput.value = "";
+            fileInput.value = "";
+            previewImg.style.display = "none";
+            previewImg.src = "";
+            btnRemoveImg.style.display = "none"; // Hide remove button initially
             
-            if (comment !== null && comment.trim() !== "") {
-                e.target.innerText = "Saving...";
-                e.target.disabled = true;
-                
-                try {
-                    // Update the specific document in Firestore
-                    const scheduleRef = doc(db, "schedules", docId);
+            modal.style.display = 'flex';
+            textInput.focus();
+        }
+    });
+
+    // --- Close Log Modal ---
+    btnCancel.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    // --- Remove Image Selection ---
+    btnRemoveImg.addEventListener('click', () => {
+        fileInput.value = ""; // Clear the file input
+        previewImg.src = "";
+        previewImg.style.display = "none";
+        btnRemoveImg.style.display = "none";
+    });
+
+    // --- Paste Event ---
+    document.addEventListener('paste', (e) => {
+        if (modal.style.display === 'flex') {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let index in items) {
+                const item = items[index];
+                if (item.kind === 'file' && item.type.includes('image/')) {
+                    const blob = item.getAsFile();
                     
-                    // We use "managerComments.MachineName" to just update that one machine's comment without overwriting the rest
-                    await updateDoc(scheduleRef, {
-                        [`managerComments.${machineName}`]: comment.trim()
-                    });
-                    
-                    // Reload the history to show the new comment
-                    loadHistory();
-                } catch (error) {
-                    console.error("Error saving comment: ", error);
-                    alert("Failed to save comment. Check your connection.");
-                    e.target.innerText = "💬 Log Shutdown";
-                    e.target.disabled = false;
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(new File([blob], `pasted_outfeed_${Date.now()}.png`, { type: blob.type }));
+                    fileInput.files = dataTransfer.files;
+
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        previewImg.src = event.target.result;
+                        previewImg.style.display = 'block';
+                        btnRemoveImg.style.display = 'block'; // Show remove button
+                    };
+                    reader.readAsDataURL(blob);
                 }
             }
+        }
+    });
+
+    // --- File Input Change Event ---
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files && fileInput.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                previewImg.src = event.target.result;
+                previewImg.style.display = 'block';
+                btnRemoveImg.style.display = 'block'; // Show remove button
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+        } else {
+            previewImg.style.display = 'none';
+            btnRemoveImg.style.display = 'none';
+        }
+    });
+
+    // --- Full Screen Viewer Events ---
+    // Open viewer when clicking an image in the log
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('manager-image')) {
+            viewerImg.src = e.target.src;
+            viewerModal.style.display = 'flex';
+        }
+    });
+    
+    // Close viewer by clicking X or anywhere in the dark background
+    closeViewer.addEventListener('click', () => {
+        viewerModal.style.display = 'none';
+    });
+    viewerModal.addEventListener('click', (e) => {
+        if (e.target === viewerModal) {
+            viewerModal.style.display = 'none';
+        }
+    });
+
+    // --- Save Log & Image ---
+    btnSave.addEventListener('click', async () => {
+        const commentText = textInput.value.trim();
+        const file = fileInput.files[0];
+
+        if (!commentText && !file) {
+            alert("Please enter a note or attach a photo.");
+            return;
+        }
+
+        btnSave.innerText = "Uploading...";
+        btnSave.disabled = true;
+
+        try {
+            let downloadUrl = null;
+
+            if (file) {
+                const fileName = `outfeed_logs/${Date.now()}_${file.name}`;
+                const storageReference = ref(storage, fileName);
+                const snapshot = await uploadBytes(storageReference, file);
+                downloadUrl = await getDownloadURL(snapshot.ref);
+            }
+
+            const scheduleRef = doc(db, "schedules", currentDocId);
+            const logObject = {
+                text: commentText,
+                imageUrl: downloadUrl
+            };
+
+            await updateDoc(scheduleRef, {
+                [`managerComments.${currentMachine}`]: logObject
+            });
+            
+            modal.style.display = 'none';
+            btnSave.innerText = "Save Log";
+            btnSave.disabled = false;
+            loadHistory();
+
+        } catch (error) {
+            console.error("Error saving comment/image: ", error);
+            alert("Failed to save log. Check your connection.");
+            btnSave.innerText = "Save Log";
+            btnSave.disabled = false;
         }
     });
 
